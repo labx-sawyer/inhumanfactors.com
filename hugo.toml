@@ -16,6 +16,12 @@ paginate = 10
   defaultTheme = "auto"
   ShowToc = true
 
+  # Site-wide cover image — shows on home page
+  [params.cover]
+    image = "images/hero.jpg"
+    alt = "Janus coin"
+    relative = false
+
   [params.homeInfoParams]
     Title = "Inhuman Factors"
     Content = "Where human factors meets the inhuman"

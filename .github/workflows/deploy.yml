@@ -1,25 +1,16 @@
-name: Deploy Hugo to GitHub Pages
+name: Deploy Hugo to DreamHost
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 defaults:
   run:
     shell: bash
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     env:
       HUGO_VERSION: 0.159.2
@@ -35,28 +26,18 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Setup Pages
-        id: pages
-        uses: actions/configure-pages@v5
-
       - name: Build
         env:
           HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
           HUGO_ENVIRONMENT: production
-        run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+        run: hugo --gc --minify
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./public
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Deploy to DreamHost
+        env:
+          DREAMHOST_PASSWORD: ${{ secrets.DREAMHOST_PASSWORD }}
+        run: |
+          sudo apt-get install -y sshpass
+          sshpass -p "$DREAMHOST_PASSWORD" rsync -avz --delete \
+            --exclude='google1172e200c978db74.html' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            public/ inhumanfactors@inhumanfactors.com:inhumanfactors.com/
